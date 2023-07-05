@@ -10,10 +10,19 @@ namespace CourierManagementSystem.Data
         {
         }
 
+        public DbSet<Request> requests { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            MapTables(modelBuilder);
+            SetDescriptionsAndDefaultValues(modelBuilder);
             base.OnModelCreating(modelBuilder);
             SeedRoles(modelBuilder);
+        }
+
+        private void MapTables(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Request>().ToTable("Request");
         }
 
         private static void SeedRoles(ModelBuilder builder)
@@ -24,5 +33,14 @@ namespace CourierManagementSystem.Data
                 new IdentityRole() { Name = "User", ConcurrencyStamp = "3", NormalizedName = "User" }
                 );
         }
+
+        private void SetDescriptionsAndDefaultValues(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Request>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId);
+        }
+
     }
 }

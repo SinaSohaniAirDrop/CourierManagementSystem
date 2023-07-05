@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace CourierManagementSystem.Models.Authentication.SignUp
+﻿namespace CourierManagementSystem.Models.Authentication.SignUp
 {
     public class ResetPassword
     {

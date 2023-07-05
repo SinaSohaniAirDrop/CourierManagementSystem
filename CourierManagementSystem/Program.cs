@@ -1,15 +1,20 @@
-﻿using CourierManagementSystem.Data;
+﻿global using System.ComponentModel;
+global using System.ComponentModel.DataAnnotations;
+global using CourierManagementSystem.Data;
+global using User.Managment.Service.Models;
+global using Microsoft.AspNetCore.Identity;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using CourierManagementSystem.Models;
+global using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NETCore.MailKit.Core;
 using System.Text;
-using User.Managment.Service.Models;
 using User.Managment.Service.Services;
+using CourierManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +53,7 @@ var emailConfig = configuration.GetSection("EmailConfiguration").Get<EmailConfig
 builder.Services.AddSingleton(emailConfig);
 
 builder.Services.AddScoped<IEmailManagerService, EmailManagerService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 
 // Add services to the container.
 

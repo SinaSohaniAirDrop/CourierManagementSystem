@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-
-namespace CourierManagementSystem.Models.Authentication.SignUp
+﻿namespace CourierManagementSystem.Models.Authentication.SignUp
 {
     public class RegisterUser
     {
