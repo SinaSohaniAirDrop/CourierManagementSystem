@@ -1,10 +1,12 @@
 ﻿using CourierManagementSystem.Models;
 using CourierManagementSystem.Models.Authentication.Login;
 using CourierManagementSystem.Models.Authentication.SignUp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -22,7 +24,8 @@ namespace CourierManagementSystem.Controllers
         private readonly IEmailManagerService _emailManagerService;
         private readonly IConfiguration _configuration;
 
-        public AuthenticationController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IEmailManagerService emailManagerService, IConfiguration configuration)
+        public AuthenticationController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, 
+            IEmailManagerService emailManagerService, IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -82,10 +85,6 @@ namespace CourierManagementSystem.Controllers
                 }
             }
             return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "This user doesn't exist!" });
-            //var message = new Message(new string[] { "alioraei65@gmail.com" }, "Test", "<h1>Lets Test!</h1>" );
-
-            //_emailManagerService.SendEmail(message);
-            //return StatusCode(StatusCodes.Status200OK, new Response { Status = "Success", Message = "Email sent successfully!" });
         }
 
 
@@ -116,6 +115,63 @@ namespace CourierManagementSystem.Controllers
             }); 
             }
             return Unauthorized();
+        }
+
+        [HttpPost]
+        [Route("ForgotPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([Required] string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var forgotPasswordLink = Url.Action(nameof(PasswordReset), "Authentication", new { token, email = user.Email }, Request.Scheme);
+                var message = new Message(new string[] { user.Email! }, "Forgot password link", forgotPasswordLink!);
+                _emailManagerService.SendEmail(message);
+                return StatusCode(StatusCodes.Status200OK, new Response
+                {
+                    Status = "Success",
+                    Message = $"Password change request has been sent to your email:{user.Email}. Please open your mailbox and click on the link to change your password!"
+                });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "Error", Message = "Couldn't send email, please try again!" });
+        }
+
+        [HttpGet("reset-password")]
+        public async Task<IActionResult> PasswordReset(string token, string email)
+        {
+            var model = new ResetPassword { Token= token, Email = email };
+            return Ok(new
+            {
+                model
+            });
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("reset-password")]
+        public async Task<IActionResult> PasswordReset(ResetPassword resetPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(resetPassword.Email);
+            if (user != null)
+            {
+                var resetPassResult = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.Password);
+                if (!resetPassResult.Succeeded)
+                {
+                    foreach(var error in resetPassResult.Errors)
+                    {
+                        ModelState.AddModelError(error.Code, error.Description);
+                    }
+                    return Ok(ModelState);
+                }
+                return StatusCode(StatusCodes.Status200OK, new Response
+                {
+                    Status = "Success",
+                    Message = "Your password has been changed!"
+                });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest, new Response { Status = "Error", Message = "Couldn't send email, please try again!" });
         }
 
         private JwtSecurityToken GetToken(List<Claim> authClaims)
