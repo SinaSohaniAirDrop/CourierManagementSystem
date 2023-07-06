@@ -16,6 +16,7 @@ namespace CourierManagementSystem.Data
         public DbSet<Insurance> insurances { get; set; }
         public DbSet<WeightDist> weightDists { get; set; }
         public DbSet<Package> packages { get; set; }
+        public DbSet<Order> orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +34,7 @@ namespace CourierManagementSystem.Data
             modelBuilder.Entity<Insurance>().ToTable("Insurance");
             modelBuilder.Entity<WeightDist>().ToTable("WeightDist");
             modelBuilder.Entity<Package>().ToTable("Package");
+            modelBuilder.Entity<Order>().ToTable("Order");
         }
 
         private static void SeedRoles(ModelBuilder builder)
@@ -73,6 +75,10 @@ namespace CourierManagementSystem.Data
             modelBuilder.Entity<Insurance>()
                  .HasIndex(x => x.MinVal)
                  .IsUnique();
+            modelBuilder.Entity<Order>()
+                .HasOne(x => x.Package)
+                .WithMany()
+                .HasForeignKey(x => x.PackageId);
         }
     }
 }

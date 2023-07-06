@@ -14,10 +14,11 @@ namespace CourierManagementSystem.Controllers
         private readonly IInsuranceService _insuranceService;
         private readonly IWeightDistService _weightDistService;
         private readonly IPackageService _packageService;
+        private readonly IOrderService _orderService;
 
         public DeveloperController(IRequestService requestService, UserManager<IdentityUser> userManager, 
             IPackagingService packagingService, IComCostService comCostService, IInsuranceService insuranceService, 
-            IWeightDistService weightDistService, IPackageService packageService)
+            IWeightDistService weightDistService, IPackageService packageService, IOrderService orderService)
         {
             _requestService = requestService;
             _userManager = userManager;
@@ -26,6 +27,7 @@ namespace CourierManagementSystem.Controllers
             _insuranceService = insuranceService;
             _weightDistService = weightDistService;
             _packageService = packageService;
+            _orderService = orderService;
         }
 
         [HttpGet]
@@ -195,6 +197,9 @@ namespace CourierManagementSystem.Controllers
         [Route("AddPackage")]
         public async Task<ActionResult<List<Package>>> AddPackage(Package package)
         {
+            string checkMessage = await CheckPackageSize(package);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
             if (string.IsNullOrEmpty(package.ReceiverId) || string.IsNullOrEmpty(package.SenderId))
                 return NotFound("SenderId and receiverId cannot be empty.");
             var sender = await _userManager.FindByIdAsync(package.SenderId);
@@ -209,6 +214,9 @@ namespace CourierManagementSystem.Controllers
         [Route("UpdatePackage")]
         public async Task<ActionResult<List<Package>>> UpdatePackage(int id, Package request)
         {
+            string checkMessage = await CheckPackageSize(request);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
             if (string.IsNullOrEmpty(request.ReceiverId) || string.IsNullOrEmpty(request.SenderId))
                 return NotFound("SenderId and receiverId cannot be empty.");
             var message = await CheckPackage(id);
@@ -239,15 +247,189 @@ namespace CourierManagementSystem.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("GetAllOrders")]
+        public async Task<ActionResult<List<Order>>> GetAllOrders()
+        {
+            return await _orderService.GetAllOrders();
+        }
+
+        [HttpGet]
+        [Route("GetSingleOrder")]
+        public async Task<ActionResult<Order>> GetSingleOrder(int id)
+        {
+            var result = await _orderService.GetSingleOrder(id);
+            if (result is null)
+                return NotFound("Order not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddOrder")]
+        public async Task<ActionResult<List<Order>>> AddOrder(Order order)
+        {
+            if (order.PackageId == 0)
+                return NotFound("PackageId cannot be empty.");
+            var package = await _packageService.GetSinglePackage(order.PackageId);
+            if (package is null)
+                return NotFound("Package cannot be empty.");
+            var user = await GetUserId();
+            if (package.SenderId != user.Id)
+                return NotFound("Package cannot be found.");
+            order.Package = package;
+            double estimatedPrice = await InnerEstimatePrice(order);
+            order.Cost = estimatedPrice;
+            var result = await _packageService.AddPackage(package);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdateOrder")]
+        public async Task<ActionResult<List<Order>>> UpdateOrder(int id, Order request)
+        {
+            if (request.PackageId == 0)
+                return NotFound("PackageId cannot be empty.");
+            var package = await _packageService.GetSinglePackage(request.PackageId);
+            if (package is null)
+                return NotFound("Package cannot be found.");
+            var user = await GetUserId();
+            if (package.SenderId != user.Id)
+                return NotFound("Package cannot be found.");
+            double estimatedPrice = await InnerEstimatePrice(request);
+            request.Cost = estimatedPrice;
+            var result = await _orderService.UpdateOrder(id, request);
+            if (result is null)
+                return NotFound("Order not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeleteOrder")]
+        public async Task<ActionResult<List<Order>>> DeleteOrder(int id)
+        {
+            var order = await _orderService.GetSingleOrder(id);
+            if (order is null)
+                return NotFound("Order cannot be found.");
+            var package = await _packageService.GetSinglePackage(id);
+            var user = await GetUserId();
+            if (package.SenderId != user.Id)
+                return NotFound("Order cannot be found.");
+            var result = await _orderService.DeleteOrder(id);
+            if (result is null)
+                return NotFound("Order not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("EstimatePrice")]
+        public async Task<ActionResult<string>> EstimatePrice(Order order)
+        {
+            try
+            {
+                int packageId = order.PackageId;
+                Package package = await _packageService.GetSinglePackage(packageId);
+                double estimatedPrice = 0;
+                List<ComCost> comCosts = await _comCostService.GetAllComCosts();
+                ComCost comCost = comCosts.First();
+                if (comCost == null)
+                    return NotFound("ComCost not found!");
+                estimatedPrice += comCost.FixedCost;
+                List<Packaging> packagingCosts = await _packagingService.GetAllPackagings();
+                Packaging packagingCost = packagingCosts.Where(x => x.Size == package.Size).First();
+                if (packagingCost != null)
+                    estimatedPrice += packagingCost.PackagingCost;
+                else
+                    return NotFound("Your package dimensions is not allowed!");
+                //double volume = width * lenght * height;
+                List<WeightDist> weightDists = await _weightDistService.GetAllWeightDists();
+                WeightDist weightDist = weightDists.Where(x => x.MinWeight <= package.Weight && x.MaxWeight > package.Weight).First();
+                if (weightDist != null)
+                {
+                    if (package.IsNeighboringCity)
+                        estimatedPrice += weightDist.NeighboringProvince;
+                    else
+                        estimatedPrice += weightDist.OtherProvince;
+                }
+                else
+                    return NotFound("Your package weight is not allowed!");
+                List<Insurance> insurances = await _insuranceService.GetAllInsurances();
+                Insurance insurance = insurances.Where(x => x.MinVal <= package.Value && x.MaxVal > package.Value).First();
+                if (insurance != null)
+                    estimatedPrice += insurance.Tariff;
+                else
+                    return NotFound("Your package value is not allowed!");
+                estimatedPrice += 0.01 * package.Value + comCost.HQCost;
+                if (package.PickupCity == package.DeliveryCity)
+                    estimatedPrice += comCost.InsiderFee / 100 * estimatedPrice;
+                else
+                    estimatedPrice += comCost.OutsiderFee / 100 * estimatedPrice;
+                estimatedPrice += estimatedPrice / 100 * comCost.tax;
+                if (order.Discount != null)
+                {
+                    var discountValue = order.Discount * estimatedPrice / 100;
+                    estimatedPrice -= discountValue;
+                }
+                return Ok(estimatedPrice);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        public async Task<double> InnerEstimatePrice(Order order)
+        {
+            int packageId = order.PackageId;
+            Package package = await _packageService.GetSinglePackage(packageId);
+            double estimatedPrice = 0;
+            List<ComCost> comCosts = await _comCostService.GetAllComCosts();
+            ComCost comCost = comCosts.First();
+            if (comCost != null)
+                estimatedPrice += comCost.FixedCost;
+            List<Packaging> packagingCosts = await _packagingService.GetAllPackagings();
+            Packaging packagingCost = packagingCosts.Where(x => x.Size == package.Size).First();
+            if (packagingCost != null)
+                estimatedPrice += packagingCost.PackagingCost;
+            //double volume = width * lenght * height;
+            List<WeightDist> weightDists = await _weightDistService.GetAllWeightDists();
+            WeightDist weightDist = weightDists.Where(x => x.MinWeight <= package.Weight && x.MaxWeight > package.Weight).First();
+            if (weightDist != null)
+            {
+                if (package.IsNeighboringCity)
+                    estimatedPrice += weightDist.NeighboringProvince;
+                else
+                    estimatedPrice += weightDist.OtherProvince;
+            }
+            List<Insurance> insurances = await _insuranceService.GetAllInsurances();
+            Insurance insurance = insurances.Where(x => x.MinVal <= package.Value && x.MaxVal > package.Value).First();
+            if (insurance != null)
+                estimatedPrice += insurance.Tariff;
+            estimatedPrice += 0.01 * package.Value + comCost.HQCost;
+            if (package.PickupCity == package.DeliveryCity)
+                estimatedPrice += comCost.InsiderFee / 100 * estimatedPrice;
+            else
+                estimatedPrice += comCost.OutsiderFee / 100 * estimatedPrice;
+            estimatedPrice += estimatedPrice / 100 * comCost.tax;
+            if (order.Discount != null)
+            {
+                var discountValue = order.Discount * estimatedPrice / 100;
+                estimatedPrice -= discountValue;
+            }
+            return estimatedPrice;
+        }
+
         protected string CheckRequestType(Request request)
         {
-            int[] types = { 0, 1 };
+            string[] types = { "Criticism", "Suggestion" };
             if (!types.Contains(request.Type))
             {
                 string message = "The type must be in: ";
-                foreach (int type in types)
+                foreach (string type in types)
                 {
-                    message += type.ToString() + " ";
+                    message += type + " ";
                 }
                 return message;
             }
@@ -283,5 +465,27 @@ namespace CourierManagementSystem.Controllers
                 return "Request not found.";
             return "ok";
         }
+
+        protected async Task<string> CheckPackageSize(Package package)
+        {
+            var packagings = await _packagingService.GetAllPackagings();
+            List<string> sizes = new List<string>();
+            foreach (var packaging in packagings)
+            {
+                sizes.Add(packaging.Size);
+            }
+            if (!sizes.Contains(package.Size))
+            {
+                string message = "The type must be in: ";
+                foreach (string size in sizes)
+                {
+                    message += size + " ";
+                }
+                return message;
+            }
+            else
+                return "ok";
+        }
+
     }
 }

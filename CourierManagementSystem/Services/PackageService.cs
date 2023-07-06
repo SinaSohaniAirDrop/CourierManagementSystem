@@ -51,7 +51,6 @@
             if (package is null)
                 return null;
 
-            package.Status = request.Status;
             package.Weight = request.Weight;
             package.Size = request.Size;
             package.PickupDate = request.PickupDate;
@@ -65,6 +64,8 @@
             package.Sender = request.Sender;
             package.ReceiverId = request.ReceiverId;
             package.Receiver = request.Receiver;
+            package.Value = request.Value;
+
             await _context.SaveChangesAsync();
 
             return await _context.packages.ToListAsync();

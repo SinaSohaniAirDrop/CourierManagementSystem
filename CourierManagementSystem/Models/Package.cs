@@ -4,11 +4,12 @@
     {
         [Key]
         public int Id { get; set; }
-        public string Status { get; set; } = "Waiting for proccess...";
         [Required]
         public double Weight { get; set; } = 0;
         [Required]
         public string Size { get; set; } = string.Empty;
+        [Required]
+        public double Value { get; set; } = 0;
         [Required]
         public DateTime PickupDate { get; set; } = DateTime.Now;
         [Required]
