@@ -101,6 +101,68 @@ namespace CourierManagementSystem.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("GetMyPackages")]
+        public async Task<ActionResult<Package>> GetMyPackages()
+        {
+            var user = await GetUserId();
+            var result = await _packageService.GetAllPackages();
+            if (result is null)
+                return NotFound("Packages not found.");
+            List<Package> packages = result.Where(x => x.SenderId == user.Id).ToList();
+            if (packages is null)
+                return NotFound("Packages not found.");
+            return Ok(packages);
+        }
+
+        [HttpPost]
+        [Route("AddPackage")]
+        public async Task<ActionResult<List<Package>>> AddPackage(Package package)
+        {
+            if (string.IsNullOrEmpty(package.ReceiverId) || string.IsNullOrEmpty(package.SenderId))
+                return NotFound("SenderId and receiverId cannot be empty.");
+            var sender = await _userManager.FindByIdAsync(package.SenderId);
+            var receiver = await _userManager.FindByIdAsync(package.ReceiverId);
+            package.Sender = sender;
+            package.Receiver = receiver;
+            var result = await _packageService.AddPackage(package);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdatePackage")]
+        public async Task<ActionResult<List<Package>>> UpdatePackage(int id, Package request)
+        {
+            if (string.IsNullOrEmpty(request.ReceiverId) || string.IsNullOrEmpty(request.SenderId))
+                return NotFound("SenderId and receiverId cannot be empty.");
+            var message = await CheckPackage(id);
+            if (message != "ok")
+                return NotFound(message);
+            var sender = await _userManager.FindByIdAsync(request.SenderId);
+            var receiver = await _userManager.FindByIdAsync(request.ReceiverId);
+            request.Sender = sender;
+            request.Receiver = receiver;
+            var result = await _packageService.UpdatePackage(id, request);
+            if (result is null)
+                return NotFound("Package not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeletePackage")]
+        public async Task<ActionResult<List<Package>>> DeletePackage(int id)
+        {
+            var message = await CheckPackage(id);
+            if (message != "ok")
+                return NotFound(message);
+            var result = await _packageService.DeletePackage(id);
+            if (result is null)
+                return NotFound("Package not found.");
+
+            return Ok(result);
+        }
+
         protected string CheckRequestType(Request request)
         {
             int[] types = { 0, 1 };
@@ -134,5 +196,17 @@ namespace CourierManagementSystem.Controllers
                 return "Request not found.";
             return "ok";
         }
+
+        protected async Task<string> CheckPackage(int id)
+        {
+            var user = await GetUserId();
+            var singleRequest = await _packageService.GetSinglePackage(id);
+            if (singleRequest is null)
+                return "Package not found.";
+            if (singleRequest.SenderId != user.Id)
+                return "Request not found.";
+            return "ok";
+        }
+
     }
 }
