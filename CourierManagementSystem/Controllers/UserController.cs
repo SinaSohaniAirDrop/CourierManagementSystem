@@ -10,10 +10,16 @@ namespace CourierManagementSystem.Controllers
     {
         private readonly IRequestService _requestService;
         private readonly UserManager<IdentityUser> _userManager;
-        public UserController(IRequestService requestService, UserManager<IdentityUser> userManager)
+        private readonly IPackagingService _packagingService;
+        private readonly IComCostService _comCostService;
+
+        public UserController(IRequestService requestService, UserManager<IdentityUser> userManager, 
+            IPackagingService packagingService, IComCostService comCostService)
         {
             _requestService = requestService;
             _userManager = userManager;
+            _packagingService = packagingService;
+            _comCostService = comCostService;
         }
 
         [HttpGet]

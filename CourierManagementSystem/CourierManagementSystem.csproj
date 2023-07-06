@@ -7,9 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\ComCost.cs" />
     <Compile Remove="Models\Insurance.cs" />
-    <Compile Remove="Models\Packaging.cs" />
     <Compile Remove="Models\WeightDist.cs" />
   </ItemGroup>
 

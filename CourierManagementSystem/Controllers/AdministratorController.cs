@@ -9,10 +9,16 @@ namespace CourierManagementSystem.Controllers
     {
         private readonly IRequestService _requestService;
         private readonly UserManager<IdentityUser> _userManager;
-        public AdministratorController(IRequestService requestService, UserManager<IdentityUser> userManager)
+        private readonly IPackagingService _packagingService;
+        private readonly IComCostService _comCostService;
+
+        public AdministratorController(IRequestService requestService, UserManager<IdentityUser> userManager, 
+            IPackagingService packagingService, IComCostService comCostService)
         {
             _requestService = requestService;
             _userManager = userManager;
+            _packagingService = packagingService;
+            _comCostService = comCostService;
         }
 
         [HttpGet]
@@ -99,6 +105,102 @@ namespace CourierManagementSystem.Controllers
             else
                 request.IsDone = true;
             var result = await _requestService.UpdateRequest(id, request);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllPackagings")]
+        public async Task<ActionResult<List<Packaging>>> GetAllPackagings()
+        {
+            return await _packagingService.GetAllPackagings();
+        }
+
+        [HttpGet]
+        [Route("GetSinglePackaging")]
+        public async Task<ActionResult<Packaging>> GetSinglePackaging(int id)
+        {
+            var result = await _packagingService.GetSinglePackaging(id);
+            if (result is null)
+                return NotFound("Packaging not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddPackaging")]
+        public async Task<ActionResult<List<Packaging>>> AddPackaging(Packaging packaging)
+        {
+            var result = await _packagingService.AddPackaging(packaging);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdatePackaging")]
+        public async Task<ActionResult<List<Packaging>>> UpdatePackaging(int id, Packaging request)
+        {
+            var result = await _packagingService.UpdatePackaging(id, request);
+            if (result is null)
+                return NotFound("Packaging not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeletePackaging")]
+        public async Task<ActionResult<List<Packaging>>> DeletePackaging(int id)
+        {
+            var result = await _packagingService.DeletePackaging(id);
+            if (result is null)
+                return NotFound("Packaging not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllComCosts")]
+        public async Task<ActionResult<List<ComCost>>> GetAllComCosts()
+        {
+            return await _comCostService.GetAllComCosts();
+        }
+
+        [HttpGet]
+        [Route("GetSingleComCost")]
+        public async Task<ActionResult<ComCost>> GetSingleComCost(int id)
+        {
+            var result = await _comCostService.GetSingleComCost(id);
+            if (result is null)
+                return NotFound("ComCost not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddComCost")]
+        public async Task<ActionResult<List<ComCost>>> AddComCost(ComCost comCost)
+        {
+            var result = await _comCostService.AddComCost(comCost);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdateComCost")]
+        public async Task<ActionResult<List<ComCost>>> UpdateComCost(int id, ComCost request)
+        {
+            var result = await _comCostService.UpdateComCost(id, request);
+            if (result is null)
+                return NotFound("ComCost not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeleteComCost")]
+        public async Task<ActionResult<List<ComCost>>> DeleteComCost(int id)
+        {
+            var result = await _comCostService.DeleteComCost(id);
+            if (result is null)
+                return NotFound("ComCost not found.");
+
             return Ok(result);
         }
 

@@ -9,10 +9,16 @@ namespace CourierManagementSystem.Controllers
     {
         private readonly IRequestService _requestService;
         private readonly UserManager<IdentityUser> _userManager;
-        public DeveloperController(IRequestService requestService, UserManager<IdentityUser> userManager)
+        private readonly IPackagingService _packagingService;
+        private readonly IComCostService _comCostService;
+
+        public DeveloperController(IRequestService requestService, UserManager<IdentityUser> userManager, 
+            IPackagingService packagingService, IComCostService comCostService)
         {
             _requestService = requestService;
             _userManager = userManager;
+            _packagingService = packagingService;
+            _comCostService = comCostService;
         }
 
         [HttpGet]
@@ -86,6 +92,42 @@ namespace CourierManagementSystem.Controllers
                 return NotFound("Request not found.");
 
             return Ok("Request deleted.");
+        }
+
+        [HttpGet]
+        [Route("GetAllPackagings")]
+        public async Task<ActionResult<List<Packaging>>> GetAllPackagings()
+        {
+            return await _packagingService.GetAllPackagings();
+        }
+
+        [HttpGet]
+        [Route("GetSinglePackaging")]
+        public async Task<ActionResult<Packaging>> GetSinglePackaging(int id)
+        {
+            var result = await _packagingService.GetSinglePackaging(id);
+            if (result is null)
+                return NotFound("Packaging not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllComCosts")]
+        public async Task<ActionResult<List<ComCost>>> GetAllComCosts()
+        {
+            return await _comCostService.GetAllComCosts();
+        }
+
+        [HttpGet]
+        [Route("GetSingleComCost")]
+        public async Task<ActionResult<ComCost>> GetSingleComCost(int id)
+        {
+            var result = await _comCostService.GetSingleComCost(id);
+            if (result is null)
+                return NotFound("ComCost not found.");
+
+            return Ok(result);
         }
 
         protected string CheckRequestType(Request request)

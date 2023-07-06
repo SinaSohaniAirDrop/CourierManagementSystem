@@ -55,6 +55,8 @@ builder.Services.AddSingleton(emailConfig);
 
 builder.Services.AddScoped<IEmailManagerService, EmailManagerService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IPackagingService, PackagingService>();
+builder.Services.AddScoped<IComCostService, ComCostService>();
 
 // Add services to the container.
 

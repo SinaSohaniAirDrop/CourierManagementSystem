@@ -4,6 +4,7 @@ using CourierManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourierManagementSystem.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230706092728_AddedPackaging")]
+    partial class AddedPackaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,34 +24,6 @@ namespace CourierManagementSystem.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("CourierManagementSystem.Models.ComCost", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("FixedCost")
-                        .HasColumnType("float");
-
-                    b.Property<double>("HQCost")
-                        .HasColumnType("float");
-
-                    b.Property<double>("InsiderFee")
-                        .HasColumnType("float");
-
-                    b.Property<double>("OutsiderFee")
-                        .HasColumnType("float");
-
-                    b.Property<double>("tax")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ComCost", (string)null);
-                });
 
             modelBuilder.Entity("CourierManagementSystem.Models.Packaging", b =>
                 {
@@ -129,21 +104,21 @@ namespace CourierManagementSystem.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "d69edb53-691a-4ad6-b9f0-1fb9bb17fef3",
+                            Id = "a8924321-3c2e-4d87-865b-12a5d9a12991",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "9cdad601-7a42-45e4-bba7-0715e2884159",
+                            Id = "48956e9a-144b-4ed7-963f-ce462f2319c9",
                             ConcurrencyStamp = "2",
                             Name = "Developer",
                             NormalizedName = "Developer"
                         },
                         new
                         {
-                            Id = "884826ef-5724-4a01-8323-963199239d8d",
+                            Id = "8a003550-c102-4fc3-873d-2a1abf46b192",
                             ConcurrencyStamp = "3",
                             Name = "User",
                             NormalizedName = "User"

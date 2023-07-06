@@ -11,6 +11,8 @@ namespace CourierManagementSystem.Data
         }
 
         public DbSet<Request> requests { get; set; }
+        public DbSet<Packaging> packagings { get; set; }
+        public DbSet<ComCost> comCosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +25,8 @@ namespace CourierManagementSystem.Data
         private void MapTables(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Request>().ToTable("Request");
+            modelBuilder.Entity<Packaging>().ToTable("Packaging");
+            modelBuilder.Entity<ComCost>().ToTable("ComCost");
         }
 
         private static void SeedRoles(ModelBuilder builder)
