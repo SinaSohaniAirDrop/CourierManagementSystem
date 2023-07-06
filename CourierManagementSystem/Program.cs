@@ -59,6 +59,7 @@ builder.Services.AddScoped<IPackagingService, PackagingService>();
 builder.Services.AddScoped<IComCostService, ComCostService>();
 builder.Services.AddScoped<IInsuranceService, InsuranceService>();
 builder.Services.AddScoped<IWeightDistService, WeightDistService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
 
 // Add services to the container.
 

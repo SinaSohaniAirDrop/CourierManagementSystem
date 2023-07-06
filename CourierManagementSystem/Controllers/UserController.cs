@@ -14,10 +14,11 @@ namespace CourierManagementSystem.Controllers
         private readonly IComCostService _comCostService;
         private readonly IInsuranceService _insuranceService;
         private readonly IWeightDistService _weightDistService;
+        private readonly IPackageService _packageService;
 
         public UserController(IRequestService requestService, UserManager<IdentityUser> userManager, 
             IPackagingService packagingService, IComCostService comCostService, IInsuranceService insuranceService, 
-            IWeightDistService weightDistService)
+            IWeightDistService weightDistService, IPackageService packageService)
         {
             _requestService = requestService;
             _userManager = userManager;
@@ -25,6 +26,7 @@ namespace CourierManagementSystem.Controllers
             _comCostService = comCostService;
             _insuranceService = insuranceService;
             _weightDistService = weightDistService;
+            _packageService = packageService;
         }
 
         [HttpGet]

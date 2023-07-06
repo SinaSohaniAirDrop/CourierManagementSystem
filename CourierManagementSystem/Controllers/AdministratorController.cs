@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CourierManagementSystem.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CourierManagementSystem.Controllers
 {
@@ -13,10 +14,11 @@ namespace CourierManagementSystem.Controllers
         private readonly IComCostService _comCostService;
         private readonly IInsuranceService _insuranceService;
         private readonly IWeightDistService _weightDistService;
+        private readonly IPackageService _packageService;
 
         public AdministratorController(IRequestService requestService, UserManager<IdentityUser> userManager, 
             IPackagingService packagingService, IComCostService comCostService, IInsuranceService insuranceService, 
-            IWeightDistService weightDistService)
+            IWeightDistService weightDistService, IPackageService packageService)
         {
             _requestService = requestService;
             _userManager = userManager;
@@ -24,6 +26,7 @@ namespace CourierManagementSystem.Controllers
             _comCostService = comCostService;
             _insuranceService = insuranceService;
             _weightDistService = weightDistService;
+            _packageService = packageService;
         }
 
         [HttpGet]
@@ -301,6 +304,66 @@ namespace CourierManagementSystem.Controllers
             var result = await _weightDistService.DeleteWeightDist(id);
             if (result is null)
                 return NotFound("WeightDist not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllPackages")]
+        public async Task<ActionResult<List<Package>>> GetAllPackages()
+        {
+            return await _packageService.GetAllPackages();
+        }
+
+        [HttpGet]
+        [Route("GetSinglePackage")]
+        public async Task<ActionResult<Package>> GetSinglePackage(int id)
+        {
+            var result = await _packageService.GetSinglePackage(id);
+            if (result is null)
+                return NotFound("Package not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddPackage")]
+        public async Task<ActionResult<List<Package>>> AddPackage(Package package)
+        {
+            if(string.IsNullOrEmpty(package.ReceiverId) || string.IsNullOrEmpty(package.SenderId))
+                return NotFound("SenderId and receiverId cannot be empty.");
+            var sender = await _userManager.FindByIdAsync(package.SenderId);
+            var receiver = await _userManager.FindByIdAsync(package.ReceiverId);
+            package.Sender = sender;
+            package.Receiver = receiver;
+            var result = await _packageService.AddPackage(package);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdatePackage")]
+        public async Task<ActionResult<List<Package>>> UpdatePackage(int id, Package request)
+        {
+            if (string.IsNullOrEmpty(request.ReceiverId) || string.IsNullOrEmpty(request.SenderId))
+                return NotFound("SenderId and receiverId cannot be empty.");
+            var sender = await _userManager.FindByIdAsync(request.SenderId);
+            var receiver = await _userManager.FindByIdAsync(request.ReceiverId);
+            request.Sender = sender;
+            request.Receiver = receiver;
+            var result = await _packageService.UpdatePackage(id, request);
+            if (result is null)
+                return NotFound("Package not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeletePackage")]
+        public async Task<ActionResult<List<Package>>> DeletePackage(int id)
+        {
+            var result = await _packageService.DeletePackage(id);
+            if (result is null)
+                return NotFound("Package not found.");
 
             return Ok(result);
         }
