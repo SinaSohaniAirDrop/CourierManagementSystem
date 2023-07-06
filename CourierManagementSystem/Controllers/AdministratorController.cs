@@ -500,7 +500,7 @@ namespace CourierManagementSystem.Controllers
             }
         }
 
-        public async Task<double> InnerEstimatePrice(Order order)
+        protected async Task<double> InnerEstimatePrice(Order order)
         {
             int packageId = order.PackageId;
             Package package = await _packageService.GetSinglePackage(packageId);
