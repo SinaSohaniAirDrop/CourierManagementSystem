@@ -11,14 +11,19 @@ namespace CourierManagementSystem.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IPackagingService _packagingService;
         private readonly IComCostService _comCostService;
+        private readonly IInsuranceService _insuranceService;
+        private readonly IWeightDistService _weightDistService;
 
         public AdministratorController(IRequestService requestService, UserManager<IdentityUser> userManager, 
-            IPackagingService packagingService, IComCostService comCostService)
+            IPackagingService packagingService, IComCostService comCostService, IInsuranceService insuranceService, 
+            IWeightDistService weightDistService)
         {
             _requestService = requestService;
             _userManager = userManager;
             _packagingService = packagingService;
             _comCostService = comCostService;
+            _insuranceService = insuranceService;
+            _weightDistService = weightDistService;
         }
 
         [HttpGet]
@@ -200,6 +205,102 @@ namespace CourierManagementSystem.Controllers
             var result = await _comCostService.DeleteComCost(id);
             if (result is null)
                 return NotFound("ComCost not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllInsurances")]
+        public async Task<ActionResult<List<Insurance>>> GetAllInsurances()
+        {
+            return await _insuranceService.GetAllInsurances();
+        }
+
+        [HttpGet]
+        [Route("GetSingleInsurance")]
+        public async Task<ActionResult<Insurance>> GetSingleInsurance(int id)
+        {
+            var result = await _insuranceService.GetSingleInsurance(id);
+            if (result is null)
+                return NotFound("Insurance not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddInsurance")]
+        public async Task<ActionResult<List<Insurance>>> AddInsurance(Insurance insurance)
+        {
+            var result = await _insuranceService.AddInsurance(insurance);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdateInsurance")]
+        public async Task<ActionResult<List<Insurance>>> UpdateInsurance(int id, Insurance request)
+        {
+            var result = await _insuranceService.UpdateInsurance(id, request);
+            if (result is null)
+                return NotFound("Insurance not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeleteInsurance")]
+        public async Task<ActionResult<List<Insurance>>> DeleteInsurance(int id)
+        {
+            var result = await _insuranceService.DeleteInsurance(id);
+            if (result is null)
+                return NotFound("Insurance not found.");
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("GetAllWeightDists")]
+        public async Task<ActionResult<List<WeightDist>>> GetAllWeightDists()
+        {
+            return await _weightDistService.GetAllWeightDists();
+        }
+
+        [HttpGet]
+        [Route("GetSingleWeightDist")]
+        public async Task<ActionResult<WeightDist>> GetSingleWeightDist(int id)
+        {
+            var result = await _weightDistService.GetSingleWeightDist(id);
+            if (result is null)
+                return NotFound("WeightDist not found.");
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("AddWeightDist")]
+        public async Task<ActionResult<List<WeightDist>>> AddWeightDist(WeightDist weightDist)
+        {
+            var result = await _weightDistService.AddWeightDist(weightDist);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("UpdateWeightDist")]
+        public async Task<ActionResult<List<WeightDist>>> UpdateWeightDist(int id, WeightDist request)
+        {
+            var result = await _weightDistService.UpdateWeightDist(id, request);
+            if (result is null)
+                return NotFound("WeightDist not found.");
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("DeleteWeightDist")]
+        public async Task<ActionResult<List<WeightDist>>> DeleteWeightDist(int id)
+        {
+            var result = await _weightDistService.DeleteWeightDist(id);
+            if (result is null)
+                return NotFound("WeightDist not found.");
 
             return Ok(result);
         }

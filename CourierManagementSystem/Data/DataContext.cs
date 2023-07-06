@@ -13,6 +13,9 @@ namespace CourierManagementSystem.Data
         public DbSet<Request> requests { get; set; }
         public DbSet<Packaging> packagings { get; set; }
         public DbSet<ComCost> comCosts { get; set; }
+        public DbSet<Insurance> insurances { get; set; }
+        public DbSet<WeightDist> weightDists { get; set; }
+        public DbSet<Package> packages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +30,9 @@ namespace CourierManagementSystem.Data
             modelBuilder.Entity<Request>().ToTable("Request");
             modelBuilder.Entity<Packaging>().ToTable("Packaging");
             modelBuilder.Entity<ComCost>().ToTable("ComCost");
+            modelBuilder.Entity<Insurance>().ToTable("Insurance");
+            modelBuilder.Entity<WeightDist>().ToTable("WeightDist");
+            modelBuilder.Entity<Package>().ToTable("Package");
         }
 
         private static void SeedRoles(ModelBuilder builder)
@@ -44,7 +50,29 @@ namespace CourierManagementSystem.Data
                 .HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId);
+            modelBuilder.Entity<Package>()
+                .HasOne(x => x.Sender)
+                .WithMany()
+                .HasForeignKey(x => x.SenderId);
+            modelBuilder.Entity<Package>()
+                .HasOne(x => x.Receiver)
+                .WithMany()
+                .HasForeignKey(x => x.ReceiverId);
+            modelBuilder.Entity<Packaging>()
+                .HasIndex(x => x.Size)
+                .IsUnique();
+            modelBuilder.Entity<WeightDist>()
+                 .HasIndex(x => x.MaxWeight)
+                 .IsUnique();
+            modelBuilder.Entity<WeightDist>()
+                 .HasIndex(x => x.MinWeight)
+                 .IsUnique();
+            modelBuilder.Entity<Insurance>()
+                 .HasIndex(x => x.MaxVal)
+                 .IsUnique();
+            modelBuilder.Entity<Insurance>()
+                 .HasIndex(x => x.MinVal)
+                 .IsUnique();
         }
-
     }
 }

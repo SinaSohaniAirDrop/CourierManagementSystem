@@ -4,6 +4,7 @@ using CourierManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourierManagementSystem.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230706102726_AddedWeightDist")]
+    partial class AddedWeightDist
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,72 +72,7 @@ namespace CourierManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MaxVal")
-                        .IsUnique();
-
-                    b.HasIndex("MinVal")
-                        .IsUnique();
-
                     b.ToTable("Insurance", (string)null);
-                });
-
-            modelBuilder.Entity("CourierManagementSystem.Models.Package", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DeliveryCity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DeliveryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeliveryLocation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsNeighboringCity")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PickupCity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PickupDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PickupLocation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiverId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("SenderId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Weight")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiverId");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("Package", (string)null);
                 });
 
             modelBuilder.Entity("CourierManagementSystem.Models.Packaging", b =>
@@ -150,12 +88,9 @@ namespace CourierManagementSystem.Migrations
 
                     b.Property<string>("Size")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Size")
-                        .IsUnique();
 
                     b.ToTable("Packaging", (string)null);
                 });
@@ -212,12 +147,6 @@ namespace CourierManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MaxWeight")
-                        .IsUnique();
-
-                    b.HasIndex("MinWeight")
-                        .IsUnique();
-
                     b.ToTable("WeightDist", (string)null);
                 });
 
@@ -250,21 +179,21 @@ namespace CourierManagementSystem.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "ee619590-e975-42f6-aff2-7a4322dddbba",
+                            Id = "45deb828-4a28-4e37-9e37-7e2ffc83fe70",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "d5b4580a-52f9-4063-9b39-7873fb3a99be",
+                            Id = "af8df4f4-d071-41df-a140-175fded646ee",
                             ConcurrencyStamp = "2",
                             Name = "Developer",
                             NormalizedName = "Developer"
                         },
                         new
                         {
-                            Id = "8e34538a-80e8-4fc7-9a89-d67fcd6cb42d",
+                            Id = "e3288261-5c9a-4b7e-86e8-3c8992811dfb",
                             ConcurrencyStamp = "3",
                             Name = "User",
                             NormalizedName = "User"
@@ -440,21 +369,6 @@ namespace CourierManagementSystem.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("CourierManagementSystem.Models.Package", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId");
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId");
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("CourierManagementSystem.Models.Request", b =>

@@ -57,6 +57,8 @@ builder.Services.AddScoped<IEmailManagerService, EmailManagerService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IPackagingService, PackagingService>();
 builder.Services.AddScoped<IComCostService, ComCostService>();
+builder.Services.AddScoped<IInsuranceService, InsuranceService>();
+builder.Services.AddScoped<IWeightDistService, WeightDistService>();
 
 // Add services to the container.
 
