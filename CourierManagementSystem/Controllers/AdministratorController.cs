@@ -1,7 +1,4 @@
-﻿using CourierManagementSystem.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace CourierManagementSystem.Controllers
 {
@@ -17,7 +14,6 @@ namespace CourierManagementSystem.Controllers
             _requestService = requestService;
             _userManager = userManager;
         }
-
 
         [HttpGet]
         [Route("GetAllRequests")]
@@ -35,20 +31,6 @@ namespace CourierManagementSystem.Controllers
                 return NotFound("Request not found.");
 
             return Ok(result);
-        }
-
-        [HttpGet]
-        [Route("GetMyRequests")]
-        public async Task<ActionResult<Request>> GetMyRequests()
-        {
-            var user = await GetUserId();
-            var result = await _requestService.GetAllRequests();
-            if (result is null)
-                return NotFound("Requests not found.");
-            List<Request> requests = result.Where(x => x.UserId == user.Id).ToList();
-            if (requests is null)
-                return NotFound("Requests not found.");
-            return Ok(requests);
         }
 
         [HttpPost]
@@ -104,6 +86,7 @@ namespace CourierManagementSystem.Controllers
             var result = await _requestService.UpdateRequest(id, request);
             return Ok(result);
         }
+
         [HttpPost]
         [Route("ChangeRequestState")]
         public async Task<ActionResult<List<Request>>> ChangeRequestState(int id)
@@ -118,6 +101,7 @@ namespace CourierManagementSystem.Controllers
             var result = await _requestService.UpdateRequest(id, request);
             return Ok(result);
         }
+
         protected string CheckRequestType(Request request)
         {
             int[] types = { 0, 1 };
@@ -133,6 +117,7 @@ namespace CourierManagementSystem.Controllers
             else
                 return "ok";
         }
+
         protected async Task<IdentityUser> GetUserId()
         {
             var username = HttpContext.User.Identity.Name;

@@ -6,15 +6,16 @@ global using Microsoft.AspNetCore.Identity;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using CourierManagementSystem.Models;
 global using Microsoft.EntityFrameworkCore;
+global using CourierManagementSystem.Services;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NETCore.MailKit.Core;
 using System.Text;
 using User.Managment.Service.Services;
-using CourierManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,6 +90,12 @@ builder.Services.AddSwaggerGen(options =>
         });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

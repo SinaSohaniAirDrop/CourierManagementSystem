@@ -55,7 +55,6 @@ namespace CourierManagementSystem.Services
             requestSingle.Text = request.Text;
             requestSingle.RegistrationDate = request.RegistrationDate;
             requestSingle.IsDone = request.IsDone;
-            requestSingle.UserId = request.UserId;
 
             await _context.SaveChangesAsync();
 
