@@ -60,6 +60,7 @@ namespace CourierManagementSystem.Controllers
             var user = await GetUserId();
             request.UserId = user.Id;
             request.User = user;
+            request.IsDone = false;
             var result = await _requestService.AddRequest(request);
             return Ok(result);
         }
@@ -333,13 +334,23 @@ namespace CourierManagementSystem.Controllers
         [Route("AddPackage")]
         public async Task<ActionResult<List<Package>>> AddPackage(Package package)
         {
+            if (package.DeliveryCity == null || package.PickupCity == null || package.DeliveryLocation == null || package.PickupLocation == null)
+                return NotFound("PickupCity/DeliveryCity/PickupLocation/DeliveryLocation cannot be empty");
             string checkMessage = await CheckPackageSize(package);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
+            checkMessage = await CheckPackageValue(package);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
+            checkMessage = await CheckPackageWeight(package);
             if (checkMessage != "ok")
                 return NotFound(checkMessage);
             if (string.IsNullOrEmpty(package.ReceiverId) || string.IsNullOrEmpty(package.SenderId))
                 return NotFound("SenderId and receiverId cannot be empty.");
             var sender = await _userManager.FindByIdAsync(package.SenderId);
             var receiver = await _userManager.FindByIdAsync(package.ReceiverId);
+            if (sender == null || receiver == null)
+                return NotFound("Sender or receiver not found.");
             package.Sender = sender;
             package.Receiver = receiver;
             var result = await _packageService.AddPackage(package);
@@ -350,13 +361,23 @@ namespace CourierManagementSystem.Controllers
         [Route("UpdatePackage")]
         public async Task<ActionResult<List<Package>>> UpdatePackage(int id, Package request)
         {
+            if (request.DeliveryCity == null || request.PickupCity == null || request.DeliveryLocation == null || request.PickupLocation == null)
+                return NotFound("PickupCity/DeliveryCity/PickupLocation/DeliveryLocation cannot be empty");
             string checkMessage = await CheckPackageSize(request);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
+            checkMessage = await CheckPackageValue(request);
+            if (checkMessage != "ok")
+                return NotFound(checkMessage);
+            checkMessage = await CheckPackageWeight(request);
             if (checkMessage != "ok")
                 return NotFound(checkMessage);
             if (string.IsNullOrEmpty(request.ReceiverId) || string.IsNullOrEmpty(request.SenderId))
                 return NotFound("SenderId and receiverId cannot be empty.");
             var sender = await _userManager.FindByIdAsync(request.SenderId);
             var receiver = await _userManager.FindByIdAsync(request.ReceiverId);
+            if (sender == null || receiver == null)
+                return NotFound("Sender or receiver not found.");
             request.Sender = sender;
             request.Receiver = receiver;
             var result = await _packageService.UpdatePackage(id, request);
@@ -561,17 +582,53 @@ namespace CourierManagementSystem.Controllers
         {
             var packagings = await _packagingService.GetAllPackagings();
             List<string> sizes = new List<string>();
-            foreach(var packaging in packagings)
+            foreach (var packaging in packagings)
             {
                 sizes.Add(packaging.Size);
             }
             if (!sizes.Contains(package.Size))
             {
-                string message = "The type must be in: ";
-                foreach (string size in sizes)
-                {
-                    message += size + " ";
-                }
+                string message = "The size must be less than: ";
+                var item = sizes[sizes.Count - 1];
+                message += item;
+                return message;
+            }
+            else
+                return "ok";
+        }
+
+        protected async Task<string> CheckPackageValue(Package package)
+        {
+            var insurances = await _insuranceService.GetAllInsurances();
+            List<string> values = new List<string>();
+            foreach (var insurance in insurances)
+            {
+                values.Add(insurance.MaxVal.ToString());
+            }
+            if (!values.Contains(package.Size))
+            {
+                string message = "The value must be less than: ";
+                var item = values[values.Count - 1];
+                message += item;
+                return message;
+            }
+            else
+                return "ok";
+        }
+
+        protected async Task<string> CheckPackageWeight(Package package)
+        {
+            var weightDists = await _weightDistService.GetAllWeightDists();
+            List<string> weights = new List<string>();
+            foreach (var weightDist in weightDists)
+            {
+                weights.Add(weightDist.MaxWeight.ToString());
+            }
+            if (!weights.Contains(package.Size))
+            {
+                string message = "The weight must be less than: ";
+                var item = weights[weights.Count - 1];
+                message += item;
                 return message;
             }
             else
