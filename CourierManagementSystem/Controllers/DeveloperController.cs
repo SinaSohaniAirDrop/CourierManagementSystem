@@ -199,7 +199,8 @@ namespace CourierManagementSystem.Controllers
         [Route("AddPackage")]
         public async Task<ActionResult<List<Package>>> AddPackage(Package package)
         {
-            if (package.DeliveryCity == null || package.PickupCity == null || package.DeliveryLocation == null || package.PickupLocation == null)
+            if (string.IsNullOrEmpty(package.DeliveryCity) || string.IsNullOrEmpty(package.PickupCity)
+                || string.IsNullOrEmpty(package.DeliveryLocation) || string.IsNullOrEmpty(package.PickupLocation)) 
                 return NotFound("PickupCity/DeliveryCity/PickupLocation/DeliveryLocation cannot be empty");
             string checkMessage = await CheckPackageSize(package);
             if (checkMessage != "ok")
@@ -226,7 +227,8 @@ namespace CourierManagementSystem.Controllers
         [Route("UpdatePackage")]
         public async Task<ActionResult<List<Package>>> UpdatePackage(int id, Package request)
         {
-            if (request.DeliveryCity == null || request.PickupCity == null || request.DeliveryLocation == null || request.PickupLocation == null)
+            if (string.IsNullOrEmpty(request.DeliveryCity) || string.IsNullOrEmpty(request.PickupCity)
+                || string.IsNullOrEmpty(request.DeliveryLocation) || string.IsNullOrEmpty(request.PickupLocation))
                 return NotFound("PickupCity/DeliveryCity/PickupLocation/DeliveryLocation cannot be empty");
             string checkMessage = await CheckPackageSize(request);
             if (checkMessage != "ok")
@@ -498,9 +500,11 @@ namespace CourierManagementSystem.Controllers
             }
             if (!sizes.Contains(package.Size))
             {
-                string message = "The size must be less than: ";
-                var item = sizes[sizes.Count - 1];
-                message += item;
+                string message = "The size must be in: ";
+                foreach (string size in sizes)
+                {
+                    message += size + " ";
+                }
                 return message;
             }
             else
@@ -510,15 +514,15 @@ namespace CourierManagementSystem.Controllers
         protected async Task<string> CheckPackageValue(Package package)
         {
             var insurances = await _insuranceService.GetAllInsurances();
-            List<string> values = new List<string>();
+            List<double> values = new List<double>();
             foreach (var insurance in insurances)
             {
-                values.Add(insurance.MaxVal.ToString());
+                values.Add(insurance.MaxVal);
             }
-            if (!values.Contains(package.Size))
+            var item = values[values.Count - 1];
+            if (item < package.Value)
             {
                 string message = "The value must be less than: ";
-                var item = values[values.Count - 1];
                 message += item;
                 return message;
             }
@@ -529,15 +533,15 @@ namespace CourierManagementSystem.Controllers
         protected async Task<string> CheckPackageWeight(Package package)
         {
             var weightDists = await _weightDistService.GetAllWeightDists();
-            List<string> weights = new List<string>();
+            List<double> weights = new List<double>();
             foreach (var weightDist in weightDists)
             {
-                weights.Add(weightDist.MaxWeight.ToString());
+                weights.Add(weightDist.MaxWeight);
             }
-            if (!weights.Contains(package.Size))
+            var item = weights[weights.Count - 1];
+            if (item < package.Weight)
             {
                 string message = "The weight must be less than: ";
-                var item = weights[weights.Count - 1];
                 message += item;
                 return message;
             }

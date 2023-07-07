@@ -56,6 +56,7 @@
             package.PickupDate = request.PickupDate;
             package.DeliveryDate = request.DeliveryDate;
             package.PickupCity = request.PickupCity;
+            package.DeliveryCity = request.DeliveryCity;
             package.DeliveryDate = request.DeliveryDate;
             package.PickupLocation = request.PickupLocation;
             package.DeliveryLocation = request.DeliveryLocation;
