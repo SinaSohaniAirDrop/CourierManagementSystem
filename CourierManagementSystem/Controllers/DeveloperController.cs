@@ -1,4 +1,5 @@
 ﻿using CourierManagementSystem.Models;
+using MailKit.Search;
 using Microsoft.AspNetCore.Http;
 
 namespace CourierManagementSystem.Controllers
@@ -211,14 +212,15 @@ namespace CourierManagementSystem.Controllers
             checkMessage = await CheckPackageWeight(package);
             if (checkMessage != "ok")
                 return NotFound(checkMessage);
-            if (string.IsNullOrEmpty(package.ReceiverId) || string.IsNullOrEmpty(package.SenderId))
-                return NotFound("SenderId and receiverId cannot be empty.");
-            var sender = await _userManager.FindByIdAsync(package.SenderId);
+            if (string.IsNullOrEmpty(package.ReceiverId))
+                return NotFound("ReceiverId cannot be empty.");
+            var sender = await GetUserId();
             var receiver = await _userManager.FindByIdAsync(package.ReceiverId);
             if (sender == null || receiver == null)
                 return NotFound("Sender or receiver not found.");
             package.Sender = sender;
             package.Receiver = receiver;
+            package.SenderId = sender.Id;
             var result = await _packageService.AddPackage(package);
             return Ok(result);
         }
@@ -244,12 +246,13 @@ namespace CourierManagementSystem.Controllers
             var message = await CheckPackage(id);
             if (message != "ok")
                 return NotFound(message);
-            var sender = await _userManager.FindByIdAsync(request.SenderId);
+            var package = await _packageService.GetSinglePackage(id);
             var receiver = await _userManager.FindByIdAsync(request.ReceiverId);
-            if (sender == null || receiver == null)
-                return NotFound("Sender or receiver not found.");
-            request.Sender = sender;
+            if (receiver == null)
+                return NotFound("Receiver not found.");
+            request.Sender = package.Sender;
             request.Receiver = receiver;
+            request.SenderId = package.SenderId;
             var result = await _packageService.UpdatePackage(id, request);
             if (result is null)
                 return NotFound("Package not found.");
@@ -264,6 +267,10 @@ namespace CourierManagementSystem.Controllers
             var message = await CheckPackage(id);
             if (message != "ok")
                 return NotFound(message);
+            Package package =await _packageService.GetSinglePackage(id);
+            var user = await GetUserId();
+            if (package.SenderId != user.Id)
+                return NotFound("Package cannot be found.");
             var result = await _packageService.DeletePackage(id);
             if (result is null)
                 return NotFound("Package not found.");
@@ -304,7 +311,8 @@ namespace CourierManagementSystem.Controllers
             order.Package = package;
             double estimatedPrice = await InnerEstimatePrice(order);
             order.Cost = estimatedPrice;
-            var result = await _packageService.AddPackage(package);
+            order.Status = "Pending";
+            var result = await _orderService.AddOrder(order);
             return Ok(result);
         }
 
@@ -312,6 +320,9 @@ namespace CourierManagementSystem.Controllers
         [Route("UpdateOrder")]
         public async Task<ActionResult<List<Order>>> UpdateOrder(int id, Order request)
         {
+            Order order = await _orderService.GetSingleOrder(id);
+            if (order is null)
+                return NotFound("Order cannot not found.");
             if (request.PackageId == 0)
                 return NotFound("PackageId cannot be empty.");
             var package = await _packageService.GetSinglePackage(request.PackageId);
@@ -322,6 +333,7 @@ namespace CourierManagementSystem.Controllers
                 return NotFound("Package cannot be found.");
             double estimatedPrice = await InnerEstimatePrice(request);
             request.Cost = estimatedPrice;
+            request.Status = order.Status;
             var result = await _orderService.UpdateOrder(id, request);
             if (result is null)
                 return NotFound("Order not found.");
@@ -347,12 +359,34 @@ namespace CourierManagementSystem.Controllers
             return Ok(result);
         }
 
+        [HttpPut]
+        [Route("RegisterOrder")]
+        public async Task<ActionResult<List<Order>>> RegisterOrder(int id)
+        {
+            var order = await _orderService.GetSingleOrder(id);
+            if (order is null)
+                return NotFound("Order cannot be found.");
+            var package = await _packageService.GetSinglePackage(order.PackageId);
+            var user = await GetUserId();
+            if (package.SenderId != user.Id)
+                return NotFound("Order cannot be found.");
+            order.Status = "Registered";
+            var result = await _orderService.UpdateOrder(id, order);
+            if (result is null)
+                return NotFound("Order not found.");
+
+            return Ok("Order registered");
+        }
+
         [HttpGet]
         [Route("EstimatePrice")]
-        public async Task<ActionResult<string>> EstimatePrice(Order order)
+        public async Task<ActionResult<string>> EstimatePrice(int orderId)
         {
             try
             {
+                Order order = await _orderService.GetSingleOrder(orderId);
+                if (order is null)
+                    return NotFound("Order not found!");
                 int packageId = order.PackageId;
                 Package package = await _packageService.GetSinglePackage(packageId);
                 double estimatedPrice = 0;
@@ -486,7 +520,7 @@ namespace CourierManagementSystem.Controllers
             if (singleRequest is null)
                 return "Package not found.";
             if (singleRequest.SenderId != user.Id)
-                return "Request not found.";
+                return "Package not found.";
             return "ok";
         }
 

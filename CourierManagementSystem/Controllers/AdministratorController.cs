@@ -430,7 +430,7 @@ namespace CourierManagementSystem.Controllers
             order.Package = package;
             double estimatedPrice = await InnerEstimatePrice(order);
             order.Cost = estimatedPrice;
-            var result = await _packageService.AddPackage(package);
+            var result = await _orderService.AddOrder(order);
             return Ok(result);
         }
 
@@ -466,12 +466,30 @@ namespace CourierManagementSystem.Controllers
             return Ok(result);
         }
 
+        [HttpPut]
+        [Route("RegisterOrder")]
+        public async Task<ActionResult<List<Order>>> RegisterOrder(int id)
+        {
+            var order = await _orderService.GetSingleOrder(id);
+            if (order is null)
+                return NotFound("Order cannot be found.");
+            order.Status = "Registered";
+            var result = await _orderService.UpdateOrder(id, order);
+            if (result is null)
+                return NotFound("Order not found.");
+
+            return Ok("Order registered");
+        }
+
         [HttpGet]
         [Route("EstimatePrice")]
-        public async Task<ActionResult<string>> EstimatePrice(Order order)
+        public async Task<ActionResult<string>> EstimatePrice(int orderId)
         {
             try
             {
+                Order order = await _orderService.GetSingleOrder(orderId);
+                if(order is null)
+                    return NotFound("Order not found!");
                 int packageId = order.PackageId;
                 Package package = await _packageService.GetSinglePackage(packageId);
                 double estimatedPrice = 0;
